@@ -1,0 +1,128 @@
+[
+  {
+    "id": "citizenship",
+    "name": "Citizenship Certificate",
+    "requirements": [
+      "Two passport-sized photos",
+      "Birth certificate",
+      "Father's and mother's citizenship certificate (photocopy)",
+      "Character certificate from the local authority",
+      "Land ownership certificate or relationship certificate"
+    ],
+    "process": [
+      "Fill out the citizenship application form",
+      "Submit the application at your local District Administration Office",
+      "Attend an interview if required",
+      "Receive your citizenship certificate"
+    ],
+    "locations": [
+      "District Administration Office (DAO) in your district",
+      "Area Administration Office in some locations"
+    ],
+    "contact": "Contact your local District Administration Office for specific requirements in your area"
+  },
+  {
+    "id": "passport",
+    "name": "Passport",
+    "requirements": [
+      "Citizenship Certificate (original and photocopy)",
+      "Recent passport-sized photos (MRP specification)",
+      "Filled application form"
+    ],
+    "process": [
+      "Submit application online at nepalpassport.gov.np",
+      "Pay the fee at the specified bank",
+      "Visit the Passport Department or District Administration Office with receipt",
+      "Provide biometric data",
+      "Collect passport after processing"
+    ],
+    "locations": [
+      "Department of Passport, Narayanhiti, Kathmandu",
+      "District Administration Offices across Nepal"
+    ],
+    "contact": "Department of Passport: 01-4416010, 01-4416011"
+  },
+  {
+    "id": "driving-license",
+    "name": "Driving License",
+    "requirements": [
+      "Citizenship Certificate (original and photocopy)",
+      "Medical report from authorized medical practitioner",
+      "Blood group certificate",
+      "Application form with photos"
+    ],
+    "process": [
+      "Register online at www.dotm.gov.np",
+      "Take written exam on the scheduled date",
+      "Take practical driving test if written test is passed",
+      "Pay the fee and collect your license"
+    ],
+    "locations": [
+      "Transport Management Offices across Nepal"
+    ],
+    "contact": "Department of Transport Management: 01-4474921"
+  },
+  {
+    "id": "pan",
+    "name": "PAN Number",
+    "requirements": [
+      "Citizenship Certificate (original and photocopy)",
+      "Business registration certificate (if applicable)",
+      "Two passport-sized photos",
+      "Application form"
+    ],
+    "process": [
+      "Fill the PAN registration form",
+      "Submit at the nearest Tax Office",
+      "Pay the registration fee",
+      "Receive PAN certificate"
+    ],
+    "locations": [
+      "Inland Revenue Offices across Nepal"
+    ],
+    "contact": "Inland Revenue Department: 01-4415802, 01-4410340"
+  },
+  {
+    "id": "nid",
+    "name": "National ID Card",
+    "requirements": [
+      "Citizenship Certificate (original and photocopy)",
+      "Birth certificate",
+      "Recent passport-sized photos",
+      "Completed application form"
+    ],
+    "process": [
+      "Fill the application form",
+      "Visit NID Management Center with required documents",
+      "Provide biometric data including fingerprints and photo",
+      "Collect NID card after processing"
+    ],
+    "locations": [
+      "National ID Management Center, Kathmandu",
+      "District Administration Offices"
+    ],
+    "contact": "National ID Management Center: 01-4211214"
+  },
+  {
+    "id": "loksewa",
+    "name": "Lok Sewa Application",
+    "requirements": [
+      "Citizenship Certificate (original and photocopy)",
+      "Recent passport-sized photos",
+      "Academic certificates",
+      "Training certificates (if applicable)",
+      "Experience letters (if applicable)"
+    ],
+    "process": [
+      "Check vacancy notice on psc.gov.np",
+      "Fill online application form",
+      "Pay application fee through bank or online payment",
+      "Download admit card for exams",
+      "Attend written test and interview as scheduled"
+    ],
+    "locations": [
+      "Public Service Commission offices across Nepal"
+    ],
+    "contact": "Public Service Commission: 01-4771487, 01-4771915"
+  }
+] 

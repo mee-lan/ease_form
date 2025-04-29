@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nepal Forms Assistant</title>
+  <link rel="stylesheet" href="frontend/css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Nepal Forms Assistant</h1>
+      <p class="tagline">सरल तरिकाले फारम भर्न मद्दत गर्ने</p>
+      <div class="language-toggle">
+        <span>Language / भाषा:</span>
+        <select id="language-selector">
+          <option value="english">English</option>
+          <option value="nepali">नेपाली</option>
+        </select>
+      </div>
+    </header>
+    
+    <div class="form-templates">
+      <h2>Choose Form Type</h2>
+      <div class="template-grid" id="template-grid">
+        <!-- Template items will be loaded dynamically -->
+        <div class="loading">Loading form templates...</div>
+      </div>
+    </div>
+    
+    <div class="help-section">
+      <h3>Need additional help?</h3>
+      <button id="chat-btn" class="btn primary-btn">Chat with Assistant</button>
+    </div>
+
+    <div id="form-detail" class="form-detail hidden">
+      <button id="back-btn" class="btn back-btn">&larr; Back</button>
+      <h2 id="form-title">Form Details</h2>
+      
+      <div class="detail-section">
+        <h3>Requirements</h3>
+        <ul id="requirements-list" class="requirements-list"></ul>
+      </div>
+      
+      <div class="detail-section">
+        <h3>Process</h3>
+        <ol id="process-list" class="process-list"></ol>
+      </div>
+      
+      <div class="detail-section">
+        <h3>Locations</h3>
+        <ul id="locations-list" class="locations-list"></ul>
+      </div>
+      
+      <div class="detail-section">
+        <h3>Contact Information</h3>
+        <p id="contact-info" class="contact-info"></p>
+      </div>
+      
+      <div class="questions-section">
+        <h3>Have questions about this form?</h3>
+        <button id="form-chat-btn" class="btn primary-btn">Ask Assistant</button>
+      </div>
+    </div>
+
+    <div id="chat-interface" class="chat-interface hidden">
+      <button id="chat-back-btn" class="btn back-btn">&larr; Back</button>
+      <h2>Chat with Assistant</h2>
+      
+      <div id="chat-messages" class="chat-messages">
+        <!-- Welcome message will be added dynamically based on language -->
+      </div>
+      
+      <div class="chat-input-container">
+        <input type="text" id="chat-input" placeholder="Ask your question here...">
+        <button id="chat-send-btn" class="btn send-btn">Send</button>
+      </div>
+    </div>
+
+    <div id="form-helper" class="form-helper hidden">
+      <div class="helper-header">
+        <span id="detected-form">Detected Form: <span class="form-name">Citizenship</span></span>
+        <button id="helper-close-btn" class="btn close-btn">×</button>
+      </div>
+      <div id="field-guidance" class="field-guidance">
+        <p>Click on any form field for guidance.</p>
+      </div>
+      <button id="helper-chat-btn" class="btn primary-btn">Ask for Help</button>
+    </div>
+
+    <footer>
+      <p>Nepal Forms Assistant © 2023</p>
+    </footer>
+  </div>
+
+  <script src="frontend/js/popup.js"></script>
+</body>
+</html> 

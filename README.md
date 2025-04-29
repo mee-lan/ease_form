@@ -2,6 +2,11 @@
 
 A Chrome browser extension that assists non-tech-savvy users in filling Nepali governmental forms with real-time guidance, AI-powered chatbot, and form templates.
 
+## Important Notice
+**The backend server now runs on port 5002** instead of the default port 5001.
+
+If you're seeing "Unable to get guidance" errors in the frontend, please make sure the frontend is configured to connect to `http://localhost:5002` instead of `http://localhost:5001`.
+
 ## Running the Extension (Current Setup)
 
 The extension is currently running in fallback mode without Gemini AI integration. This means:
@@ -22,7 +27,7 @@ The extension is currently running in fallback mode without Gemini AI integratio
    - Enable "Developer mode" in the top right corner
    - Click "Load unpacked" and select the root folder of this project
 
-3. The server will run on http://localhost:5000 and the extension will connect to it.
+3. The server will run on http://localhost:5002 and the extension will connect to it.
 
 ### Features Available in Fallback Mode
 

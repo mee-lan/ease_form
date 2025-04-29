@@ -4,9 +4,9 @@
   "version": "1.0",
   "description": "Helps non-tech-savvy users fill Nepali governmental forms with guidance and templates",
   "permissions": ["activeTab", "storage", "scripting"],
-  "host_permissions": ["https://*/*", "http://localhost:5000/*", "http://127.0.0.1:5000/*", "http://localhost:5001/*", "http://127.0.0.1:5001/*"],
+  "host_permissions": ["https://*/*", "http://localhost:5000/*", "http://127.0.0.1:5000/*", "http://localhost:5001/*", "http://127.0.0.1:5001/*", "http://localhost:5002/*", "http://127.0.0.1:5002/*"],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 http://localhost:5001 http://127.0.0.1:5001; object-src 'self'"
+    "extension_pages": "script-src 'self'; connect-src 'self' http://localhost:5000 http://127.0.0.1:5000 http://localhost:5001 http://127.0.0.1:5001 http://localhost:5002 http://127.0.0.1:5002; object-src 'self'"
   },
   "action": {
     "default_popup": "popup.html",

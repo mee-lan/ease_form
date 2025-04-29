@@ -27,6 +27,15 @@ function init() {
     return true;
   });
   
+  // Add document click handler to close tooltips when clicking outside
+  document.addEventListener('click', function(event) {
+    // Check if click is outside any form field or tooltip
+    if (!event.target.closest('input, select, textarea, .nepal-forms-tooltip')) {
+      // Close all tooltips
+      closeAllTooltips();
+    }
+  });
+  
   // Automatically scan for forms when page loads
   detectForms();
 }

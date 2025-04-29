@@ -1,34 +1,22 @@
 // Background service worker for Nepal Forms Assistant
 
-const API_BASE_URL = 'http://127.0.0.1:5001/api';
+const API_BASE_URL = 'http://127.0.0.1:5002/api';
 
-// Listen for messages from content scripts or popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'field_focus') {
-    // Handle when a form field is focused
-    updateFieldGuidance(message.field_name, message.form_type);
-  } else if (message.action === 'get_field_guidance') {
-    // Get guidance for a specific field
-    fetchFieldGuidance(message.field_name, message.form_type)
-      .then(guidance => {
-        sendResponse({ guidance: guidance });
-      })
-      .catch(error => {
-        console.error('Error getting field guidance:', error);
-        sendResponse({ guidance: 'Unable to get guidance for this field.' });
-      });
-    
-    // Return true to indicate we will send a response asynchronously
-    return true;
-  } else if (message.action === 'helper_injected') {
-    // Log that the helper was injected successfully
-    console.log(`Form helper injected for ${message.form_type} with ${message.field_count} fields`);
-  }
-});
+// Debounce function to prevent multiple rapid requests
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
-// Update field guidance in the popup UI
-function updateFieldGuidance(fieldName, formType) {
-  // Send message to popup.js to update the guidance
+// Debounced version of field guidance update
+const debouncedUpdateFieldGuidance = debounce((fieldName, formType) => {
   chrome.runtime.sendMessage({
     action: 'update_guidance',
     field_name: fieldName,
@@ -39,11 +27,102 @@ function updateFieldGuidance(fieldName, formType) {
       console.error('Error updating field guidance:', error);
     }
   });
+}, 300); // 300ms debounce
+
+// Track ongoing requests to prevent duplicates
+let pendingGuidanceRequests = {};
+
+// Listen for messages from content scripts or popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'field_focus') {
+    // Handle when a form field is focused - use debounced version
+    debouncedUpdateFieldGuidance(message.field_name, message.form_type);
+  } else if (message.action === 'get_field_guidance') {
+    // Create a unique key for this request
+    const requestKey = `${message.field_name}_${message.form_type}_${message.language || 'default'}`;
+    
+    // Check if we already have a pending request for this exact field
+    if (pendingGuidanceRequests[requestKey]) {
+      console.log('Duplicate request detected, using existing promise');
+      pendingGuidanceRequests[requestKey]
+        .then(guidance => {
+          sendResponse({ guidance: guidance });
+        })
+        .catch(error => {
+          console.error('Error getting field guidance:', error);
+          sendResponse({ guidance: 'Unable to get guidance for this field.' });
+        });
+    } else {
+      // Create new request
+      const guidancePromise = fetchFieldGuidance(message.field_name, message.form_type, message.language);
+      pendingGuidanceRequests[requestKey] = guidancePromise;
+      
+      guidancePromise
+        .then(guidance => {
+          sendResponse({ guidance: guidance });
+          // Clean up after request completes
+          delete pendingGuidanceRequests[requestKey];
+        })
+        .catch(error => {
+          console.error('Error getting field guidance:', error);
+          sendResponse({ guidance: 'Unable to get guidance for this field.' });
+          // Clean up after request fails
+          delete pendingGuidanceRequests[requestKey];
+        });
+    }
+    
+    // Return true to indicate we will send a response asynchronously
+    return true;
+  } else if (message.action === 'helper_injected') {
+    // Log that the helper was injected successfully
+    console.log(`Form helper injected for ${message.form_type} with ${message.field_count} fields`);
+  } else if (message.action === 'get_language') {
+    // Get current language preference from API
+    fetchLanguagePreference()
+      .then(language => {
+        sendResponse({ language: language });
+      })
+      .catch(error => {
+        console.error('Error getting language preference:', error);
+        sendResponse({ language: 'english' }); // Default to English on error
+      });
+      
+    // Return true to indicate we will send a response asynchronously
+    return true;
+  }
+});
+
+// Update field guidance in the popup UI - this is now wrapped in the debounced function above
+function updateFieldGuidance(fieldName, formType) {
+  // This function is now just a pass-through to the debounced version
+  debouncedUpdateFieldGuidance(fieldName, formType);
+}
+
+// Fetch language preference from API
+async function fetchLanguagePreference() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/language`);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.language || 'english';
+  } catch (error) {
+    console.error('Error fetching language preference:', error);
+    return 'english'; // Default to English on error
+  }
 }
 
 // Fetch field guidance from API
-async function fetchFieldGuidance(fieldName, formType) {
+async function fetchFieldGuidance(fieldName, formType, language = null) {
   try {
+    // If language not provided, fetch it
+    if (!language) {
+      language = await fetchLanguagePreference();
+    }
+    
     const response = await fetch(`${API_BASE_URL}/field-guidance`, {
       method: 'POST',
       headers: {
@@ -51,7 +130,8 @@ async function fetchFieldGuidance(fieldName, formType) {
       },
       body: JSON.stringify({
         field_name: fieldName,
-        form_type: formType
+        form_type: formType,
+        language: language
       })
     });
     

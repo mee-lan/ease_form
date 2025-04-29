@@ -5,6 +5,7 @@ import json
 import sys
 import requests
 from form_detector import FormDetector
+import re
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -384,31 +385,62 @@ def detect_form():
 
 @app.route('/api/field-guidance', methods=['POST'])
 def get_field_guidance():
-    """Get AI-powered guidance for filling a specific field"""
-    try:
-        data = request.json
-        field_name = data.get('field_name', '')
-        form_type = data.get('form_type', '')
-        
-        # Get language from request payload first (priority)
-        language = data.get('language', None)
-        
-        # If not specified in request, use the stored preference
-        if not language:
-            language = get_current_language()
+    """Get guidance for filling a specific field"""
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    # Extract parameters
+    field_name = data.get('field_name', '')
+    form_type = data.get('form_type', '')
+    language = data.get('language', 'english').lower()
+    
+    if not field_name or not form_type:
+        return jsonify({'error': 'Missing required parameters'}), 400
+    
+    if language == "nepali" and form_detector.api_caller:
+        # Generate Nepali response using AI with specific instructions
+        try:
+            field_name_display = field_name.replace('_', ' ').title()
             
-        if not field_name or not form_type:
-            return jsonify({"error": "Missing field name or form type"}), 400
+            # Very specific prompt to ensure proper Nepali response
+            prompt = f"""
+            तपाईं एक नेपाली फारम भर्न सहयोग गर्ने सहायक हुनुहुन्छ।
+
+            यो फारम हो: {form_type}
+            यो फारममा भर्नुपर्ने फिल्ड: "{field_name_display}"
+
+            कृपया यो फिल्ड कसरी भर्ने भन्ने बारे नेपाली भाषामा सल्लाह दिनुहोस्।
+            तपाईंको उत्तर केवल नेपाली भाषामा दिनुहोस्। अंग्रेजी शब्दहरू प्रयोग नगर्नुहोस्।
+            उत्तर छोटो र स्पष्ट होस् (1-2 वाक्य मात्र)। 
+            बुलेट पोइन्ट प्रयोग गर्नुहोस् र "• " बाट सुरु गर्नुहोस्।
+            """
             
-        # Call form detector with language preference
+            guidance = form_detector.api_caller(prompt)
+            
+            # Verify response is actually in Nepali
+            # Simple check: look for Nepali Unicode characters
+            nepali_chars = re.findall(r'[\u0900-\u097F]', guidance)
+            if not nepali_chars or len(nepali_chars) < 10:
+                print("AI didn't generate proper Nepali response")
+                # Fallback message in Nepali
+                return jsonify({
+                    'guidance': f"• कृपया {field_name_display.lower()} फिल्ड सावधानीपूर्वक भर्नुहोस्।"
+                })
+                
+            return jsonify({'guidance': guidance.strip()})
+            
+        except Exception as e:
+            print(f"Error generating Nepali guidance: {e}")
+            # Fallback message in Nepali
+            return jsonify({
+                'guidance': f"• कृपया {field_name_display.lower()} फिल्ड सावधानीपूर्वक भर्नुहोस्।"
+            })
+    else:
+        # For English or if AI is not available, use the form detector
         guidance = form_detector.get_field_guidance(field_name, form_type, language)
-        
-        return jsonify({
-            "field_name": field_name,
-            "guidance": guidance
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'guidance': guidance})
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
@@ -634,4 +666,4 @@ def get_fallback_response(user_message, language):
 
 if __name__ == '__main__':
     # Run without debug mode to avoid the reloader which causes issues with Cursor.AppImage
-    app.run(debug=False, port=5001) 
+    app.run(debug=False, port=5002) 

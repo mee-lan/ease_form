@@ -152,100 +152,138 @@ class FormDetector:
         
         return ""
         
-    def get_field_guidance(self, field_name, form_type, language="english"):
+    def get_field_guidance(self, field_name, form_type, language='english'):
         """
-        Provide guidance for filling a specific field
+        Get AI-generated guidance for filling a specific field in a form.
+        
+        Args:
+            field_name (str): The name of the field to get guidance for
+            form_type (str): The type of form being filled
+            language (str): The language for the guidance (default: 'english')
+        
+        Returns:
+            str: Guidance text for filling out the field
         """
-        # Simplified guidance as fallback
-        form_guidance = {
-            "citizenship": {
-                "english": {
-                    "name": "• Enter your full name as it appears on your birth certificate",
-                    "address": "• Enter your permanent address registered in Nepal",
-                    "dob": "• Enter your date of birth in BS (Bikram Sambat) format",
-                    "father_name": "• Enter your father's full name",
-                    "mother_name": "• Enter your mother's full name"
-                },
-                "nepali": {
-                    "name": "• तपाईंको जन्म दर्ता प्रमाणपत्रमा भएको पूरा नाम लेख्नुहोस्",
-                    "address": "• नेपालमा दर्ता भएको तपाईंको स्थायी ठेगाना लेख्नुहोस्",
-                    "dob": "• तपाईंको जन्म मिति बि.स. (बिक्रम सम्बत) मा लेख्नुहोस्",
-                    "father_name": "• तपाईंको बुवाको पूरा नाम लेख्नुहोस्",
-                    "mother_name": "• तपाईंको आमाको पूरा नाम लेख्नुहोस्"
-                }
-            },
-            "passport": {
-                "english": {
-                    "name": "• Enter your full name in CAPITAL LETTERS exactly as in your citizenship",
-                    "address": "• Enter your permanent address as registered in your citizenship",
-                    "phone": "• Enter your mobile number that's actively in use"
-                },
-                "nepali": {
-                    "name": "• तपाईंको नागरिकतामा भएको जस्तै CAPITAL LETTERS मा पूरा नाम लेख्नुहोस्",
-                    "address": "• तपाईंको नागरिकतामा दर्ता भएको स्थायी ठेगाना लेख्नुहोस्",
-                    "phone": "• तपाईंको सक्रिय रूपमा प्रयोग भइरहेको मोबाइल नम्बर लेख्नुहोस्"
-                }
-            },
-            "driving-license": {
-                "english": {
-                    "name": "• Enter your full name as it appears on your citizenship",
-                    "blood_group": "• Enter your blood group (A+, B+, AB+, O+, A-, B-, AB-, O-)",
-                    "vehicle_type": "• Select the type of vehicle you're applying for"
-                },
-                "nepali": {
-                    "name": "• तपाईंको नागरिकतामा भएको पूरा नाम लेख्नुहोस्",
-                    "blood_group": "• तपाईंको रक्त समूह लेख्नुहोस् (A+, B+, AB+, O+, A-, B-, AB-, O-)",
-                    "vehicle_type": "• तपाईंले आवेदन दिन चाहेको सवारी साधनको प्रकार छान्नुहोस्"
-                }
-            },
-            "pan": {
-                "english": {
-                    "name": "• Enter your full legal name as in your citizenship",
-                    "address": "• Enter your current business or residence address",
-                    "business_name": "• Enter your business name if applicable"
-                },
-                "nepali": {
-                    "name": "• तपाईंको नागरिकतामा भएको पूरा कानूनी नाम लेख्नुहोस्",
-                    "address": "• तपाईंको हालको व्यापार वा आवासीय ठेगाना लेख्नुहोस्",
-                    "business_name": "• लागू भएमा तपाईंको व्यापारको नाम लेख्नुहोस्"
-                }
-            }
-        }
-        
-        # Try AI-powered guidance if available
-        if self.has_gemini and self.api_caller:
-            try:
-                # Add language instruction
-                lang_instruction = ""
-                if language.lower() == "nepali":
-                    lang_instruction = "Provide your response in Nepali language. Use bullet points."
-                else:
-                    lang_instruction = "Provide your response in English. Use bullet points."
-                
-                prompt = f"""
-                {lang_instruction}
-                
-                Provide simple guidance for filling out the "{field_name}" field 
-                in a Nepali {form_type} form. Keep it very brief, 1-2 sentences only.
-                Be specific about what information should go in this field.
-                """
-                
-                guidance = self.api_caller(prompt)
-                if guidance:
-                    return guidance.strip()
-            except Exception as e:
-                print(f"Error using AI for field guidance: {e}")
-        
-        # Try to find guidance for this field in our fallback data
-        lang = language.lower()
-        if lang not in ["english", "nepali"]:
-            lang = "english"  # Default to English if the language is not supported
+        try:
+            # Normalize field name for more consistent lookup
+            field_display = field_name.replace('_', ' ').lower()
             
-        if form_type in form_guidance and field_name.lower() in form_guidance[form_type].get(lang, {}):
-            return form_guidance[form_type][lang][field_name.lower()]
+            # Only proceed with AI if we have access
+            if self.has_gemini and self.api_caller:
+                # Create a prompt for the AI based on language
+                language = language.lower()
+                
+                if language == 'nepali':
+                    prompt = f"""
+                    नेपाली भाषामा सरकारी फारमको फिल्डको लागि विशिष्ट मार्गदर्शन प्रदान गर्नुहोस्।
+                    
+                    फारम प्रकार: {form_type}
+                    फिल्ड नाम: "{field_display}"
+                    
+                    निर्देशन:
+                    1. यो फिल्डमा के प्रविष्ट गर्नुपर्छ भन्ने बारे विशिष्ट जानकारी प्रदान गर्नुहोस्
+                    2. निर्देशन छोटो (2-3 वाक्य) र स्पष्ट राख्नुहोस्
+                    3. हरेक बुँदा "• " बाट सुरु गर्नुहोस्
+                    4. यो फिल्डसँग सम्बन्धित कुनै महत्त्वपूर्ण जानकारी समावेश गर्नुहोस्
+                    
+                    अत्यन्त महत्त्वपूर्ण: तपाईंको उत्तर अनिवार्य रूपमा र पूर्ण रूपमा नेपाली भाषामा हुनुपर्छ।
+                    """
+                else:  # Default to English
+                    prompt = f"""
+                    Provide specific guidance for filling the "{field_display}" field in a {form_type} form.
+                    
+                    Instructions:
+                    1. Be specific about what information should be entered in this field
+                    2. Keep guidance brief (2-3 sentences) and clear
+                    3. Start each point with "• "
+                    4. Include any important considerations related to this field
+                    
+                    Keep your answer focused on practical guidance for filling this specific field.
+                    """
+                
+                # Get AI-generated guidance
+                guidance = self.api_caller(prompt)
+                
+                # Simple validation - check if it has bullet points and is not too short
+                if guidance and '•' in guidance and len(guidance) > 20:
+                    return guidance.strip()
+            
+            # If AI is not available or returns invalid response, use field-specific fallback
+            return self._get_field_specific_fallback(field_display, form_type, language)
+                
+        except Exception as e:
+            print(f"Error generating field guidance: {e}")
+            # Generic fallback in case of error
+            return self._get_field_specific_fallback(field_name, form_type, language)
+            
+    def _get_field_specific_fallback(self, field_name, form_type, language='english'):
+        """
+        Provides field-specific fallback guidance based on common field types
         
-        # Generic fallback
-        if lang == "nepali":
-            return f"• तपाईंको {field_name} जानकारी भर्नुहोस्।"
+        Args:
+            field_name (str): The name of the field
+            form_type (str): The type of form being filled
+            language (str): The language for the guidance
+            
+        Returns:
+            str: Specific guidance for the field type
+        """
+        field_display = field_name.replace('_', ' ').lower()
+        
+        # Map common field types to more specific guidance
+        if language == 'nepali':
+            # Detect field type from the field name
+            if any(name in field_display for name in ['name', 'नाम']):
+                return "• कृपया आफ्नो पूरा नाम लेख्नुहोस्\n• थर पहिले र नाम पछि लेख्नुहोस्\n• नेपाली वा अङ्ग्रेजी दुवै भाषामा हुन सक्छ"
+            elif any(name in field_display for name in ['address', 'ठेगाना']):
+                return "• आफ्नो पूरा ठेगाना उल्लेख गर्नुहोस्\n• प्रदेश, जिल्ला र वडा नम्बर समावेश गर्नुहोस्\n• स्थायी ठेगाना र अस्थायी ठेगाना फरक भए दुवै उल्लेख गर्नुहोस्"
+            elif any(name in field_display for name in ['phone', 'mobile', 'फोन', 'मोबाइल']):
+                return "• आफ्नो मोबाइल नम्बर ९८ बाट सुरु गरी १० अङ्क लेख्नुहोस्\n• एउटा मात्र फोन नम्बर उल्लेख गर्नुहोस् जुन तपाईंले नियमित रूपमा प्रयोग गर्नुहुन्छ"
+            elif any(name in field_display for name in ['email', 'ईमेल']):
+                return "• आफ्नो सक्रिय ईमेल ठेगाना लेख्नुहोस्\n• ईमेल ठेगानामा @ चिन्ह अनिवार्य छ\n• मान्य ईमेल प्रदायक (जस्तै gmail.com) प्रयोग गर्नुहोस्"
+            elif any(name in field_display for name in ['dob', 'birth', 'date', 'जन्म']):
+                return "• जन्म मिति वि.सं. अनुसार (YYYY-MM-DD) फर्म्याटमा लेख्नुहोस्\n• अङ्ग्रेजी मितिमा रूपान्तरण गर्न सरकारी वेबसाइट प्रयोग गर्न सक्नुहुन्छ"
+            elif any(name in field_display for name in ['father', 'बुवा']):
+                return "• बुवाको पूरा नाम लेख्नुहोस्\n• थर पहिले र नाम पछि लेख्नुहोस्\n• नागरिकता अनुसारको नाम लेख्नुहोस्"
+            elif any(name in field_display for name in ['mother', 'आमा']):
+                return "• आमाको पूरा नाम लेख्नुहोस्\n• थर पहिले र नाम पछि लेख्नुहोस्\n• नागरिकता अनुसारको नाम लेख्नुहोस्"
+            elif any(name in field_display for name in ['citizenship', 'नागरिकता']):
+                return "• नागरिकता प्रमाणपत्र नम्बर लेख्नुहोस्\n• जारी जिल्ला र मिति पनि उल्लेख गर्नुहोस्\n• नम्बरहरू स्पष्ट र सही तरिकाले लेख्नुहोस्"
+            elif any(name in field_display for name in ['photo', 'तस्वीर']):
+                return "• हालसालै खिचिएको पासपोर्ट साइजको फोटो अपलोड गर्नुहोस्\n• फोटो स्पष्ट, सेतो पृष्ठभूमिमा र मुख प्रष्ट देखिने हुनुपर्छ"
+            elif form_type == 'citizenship':
+                return f"• कृपया नागरिकता फारमको लागि यो '{field_display}' फिल्डमा सही जानकारी प्रविष्ट गर्नुहोस्\n• यो जानकारी तपाईंको पहिचान प्रमाणित गर्न प्रयोग हुनेछ"
+            elif form_type == 'passport':
+                return f"• राहदानी (पासपोर्ट) आवेदनमा यो फिल्ड महत्त्वपूर्ण छ\n• कृपया प्रमाणपत्रहरूसँग मिल्ने गरी सही जानकारी भर्नुहोस्"
+            elif form_type == 'driving-license':
+                return f"• सवारी चालक अनुमतिपत्रको लागि यस फिल्डमा आवश्यक विवरण भर्नुहोस्\n• नागरिकता/राहदानी अनुसारको जानकारी प्रविष्ट गर्नुहोस्"
+            else:
+                return f"• कृपया यो {field_display} फिल्डमा सही जानकारी प्रविष्ट गर्नुहोस्।\n• यो फिल्ड {form_type} फारमको लागि महत्त्वपूर्ण छ।"
         else:
-            return f"• Fill in your {field_name} information." 
+            # English fallbacks
+            if any(name in field_display for name in ['name']):
+                return "• Enter your full name as it appears on your identity documents\n• Use the format: Last name, First name\n• Use either English or Nepali"
+            elif any(name in field_display for name in ['address']):
+                return "• Enter your complete address\n• Include province, district, and ward number\n• Provide both permanent and temporary addresses if different"
+            elif any(name in field_display for name in ['phone', 'mobile']):
+                return "• Enter your 10-digit mobile number starting with 98\n• Provide only one phone number that you use regularly"
+            elif any(name in field_display for name in ['email']):
+                return "• Enter your active email address\n• Make sure it includes the @ symbol\n• Use a valid email provider (like gmail.com)"
+            elif any(name in field_display for name in ['dob', 'birth', 'date']):
+                return "• Enter date in Bikram Sambat (B.S.) format: YYYY-MM-DD\n• You can use government websites to convert from English calendar"
+            elif any(name in field_display for name in ['father']):
+                return "• Enter your father's full name as it appears on his citizenship\n• Use the format: Last name, First name"
+            elif any(name in field_display for name in ['mother']):
+                return "• Enter your mother's full name as it appears on her citizenship\n• Use the format: Last name, First name"
+            elif any(name in field_display for name in ['citizenship']):
+                return "• Enter your citizenship certificate number\n• Include issuing district and date\n• Write numbers clearly and accurately"
+            elif any(name in field_display for name in ['photo']):
+                return "• Upload a recent passport-size photo\n• Photo should be clear with white background and face clearly visible"
+            elif form_type == 'citizenship':
+                return f"• Please enter the correct information for this {field_display} field on the citizenship form\n• This information will be used to verify your identity"
+            elif form_type == 'passport':
+                return f"• This field is important for your passport application\n• Enter information exactly as it appears on your supporting documents"
+            elif form_type == 'driving-license':
+                return f"• Enter the required information for your driving license application\n• Information should match your citizenship/passport"
+            else:
+                return f"• Please enter the correct information for the {field_display} field.\n• Make sure it matches your official documents." 

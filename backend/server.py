@@ -76,6 +76,7 @@ def call_gemini_api(prompt, system_message=None, language="english"):
                 Translate the given text completely to Nepali using Devanagari script.
                 Do not include any English text, explanations, or notes in your response.
                 Just provide the Nepali translation of the text.
+               
                 """
                 nepali_response = _get_api_response(url, headers, translation_prompt, translation_system_message, "nepali")
                 if nepali_response and any('\u0900' <= c <= '\u097F' for c in nepali_response):
@@ -99,7 +100,7 @@ def _get_api_response(url, headers, prompt, system_message=None, language="engli
         # Add system message if provided
         system_content = """
         You are an assistant for Nepal government forms and bureaucratic processes. 
-        You provide simple guidance for people who need to obtain or fill out forms.
+        You provide simple guidance  for people who need to obtain or fill out forms.
         """
         
         if system_message:
@@ -123,9 +124,10 @@ def _get_api_response(url, headers, prompt, system_message=None, language="engli
             YOU MUST RESPOND IN NEPALI LANGUAGE ONLY.
             This is EXTREMELY IMPORTANT: Even if the user's question is in English, you MUST translate your response to Nepali.
             Do not use English in your response at all.
-            Format your response as bullet points.
+           
             Keep your answer focused on Nepal government forms and processes.
             This instruction overrides all other instructions about language choice.
+               
             """
             # Add specific instruction for English input requiring Nepali output
             if not is_input_nepali:
@@ -138,7 +140,7 @@ def _get_api_response(url, headers, prompt, system_message=None, language="engli
             language_instruction = """
             YOU MUST RESPOND IN ENGLISH LANGUAGE ONLY.
             Even if the user's question is in Nepali, provide your response in English.
-            Format your response as bullet points.
+           
             Keep your answer focused on Nepal government forms and processes.
             This instruction overrides all other instructions about language choice.
             """
@@ -484,6 +486,7 @@ def chat():
                 You are an assistant helping non-tech-savvy users with Nepali governmental forms.
                 Provide simple, clear instructions and guidance for form filling.
                 Use simple language and avoid technical terms.
+                 The response should be in point  form not in paragraph
                 Always provide accurate information about document requirements, office locations, and procedures.
                 """
                 
@@ -494,6 +497,7 @@ def chat():
                     This is CRITICALLY IMPORTANT. Do not use English at all.
                     Your entire response must be in Nepali script.
                     Translate all information to Nepali before responding.
+                    
                     """
                 else:
                     system_prompt += "\nYOU MUST RESPOND IN ENGLISH LANGUAGE ONLY. Do not use Nepali."

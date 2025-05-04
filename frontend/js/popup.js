@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chatMessages.innerHTML = welcomeHTML;
   }
   
-  function sendChatMessage() {
+function sendChatMessage() {
     const message = chatInput.value.trim();
     if (!message) return;
     
@@ -477,8 +477,16 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(response => response.json())
     .then(data => {
       console.log('Received chat response in language:', currentLanguage);
+      // Preprocess bot response to remove "**" and replace bullet points with Unicode bullets
+      let botMessage = data.response.replace(/\*\*/g, '');
+      botMessage = botMessage.split('\n').map(line => {
+        if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+          return '• ' + line.trim().substring(2);
+        }
+        return line;
+      }).join('\n');
       // Add bot response to chat
-      addChatMessage(data.response, 'bot');
+      addChatMessage(botMessage, 'bot');
     })
     .catch(error => {
       console.error('Error sending chat message:', error);
@@ -490,12 +498,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  function addChatMessage(message, sender) {
+function addChatMessage(message, sender) {
     const messageElement = document.createElement('div');
     messageElement.className = `message ${sender}-message`;
     
     const messageText = document.createElement('p');
-    messageText.textContent = message;
+    if (sender === 'bot') {
+      // Remove markdown bold syntax "**" from bot messages
+      message = message.replace(/\*\*/g, '');
+      // Replace lines starting with "* " with line breaks
+      // Convert message to HTML with <br> for new lines
+      const lines = message.split('\n').map(line => {
+        if (line.trim().startsWith('* ')) {
+          return line.replace('* ', '') + '<br>';
+        }
+        return line + '<br>';
+      });
+      messageText.innerHTML = lines.join('');
+    } else {
+      messageText.textContent = message;
+    }
     messageElement.appendChild(messageText);
     
     chatMessages.appendChild(messageElement);

@@ -5,12 +5,105 @@ let currentLanguage = 'english'; // Default language
 
 // Add Nepali translations for form names
 const formTranslations = {
-  'citizenship': 'नागरिकता प्रमाणपत्र',
-  'passport': 'राहदानी',
-  'driving-license': 'सवारी चालक अनुमतिपत्र',
-  'pan': 'स्थायी लेखा नम्बर',
-  'nid': 'राष्ट्रिय परिचयपत्र',
-  'loksewa': 'लोक सेवा आयोग'
+  'citizenship': {
+    name: 'नागरिकता प्रमाणपत्र',
+    requirements: [
+      'दुई वटा पासपोर्ट साइजको फोटो',
+      'जन्म दर्ता प्रमाणपत्र',
+      'बुवा र आमाको नागरिकता प्रमाणपत्र (फोटोकपी)',
+      'स्थानीय प्राधिकरणबाट चरित्र प्रमाणपत्र',
+      'जग्गा मालिकी प्रमाणपत्र वा नाता प्रमाणपत्र'
+    ],
+    process: [
+      'नागरिकता आवेदन फारम भर्नुहोस्',
+      'आफ्नो जिल्ला प्रशासन कार्यालयमा आवेदन पेश गर्नुहोस्',
+      'आवश्यक परेमा अन्तरवार्ता दिनुहोस्',
+      'नागरिकता प्रमाणपत्र प्राप्त गर्नुहोस्'
+    ],
+    locations: [
+      'आफ्नो जिल्लाको जिल्ला प्रशासन कार्यालय (जिप्राका)',
+      'केही स्थानहरूमा क्षेत्र प्रशासन कार्यालय'
+    ],
+    contact: 'आफ्नो क्षेत्रको विशेष आवश्यकताहरूको लागि आफ्नो स्थानीय जिल्ला प्रशासन कार्यालयमा सम्पर्क गर्नुहोस्'
+  },
+  'passport': {
+    name: 'राहदानी',
+    requirements: [
+      'नागरिकता प्रमाणपत्र (मूल र फोटोकपी)',
+      'हालको पासपोर्ट साइजको फोटोहरू (एमआरपी स्पेसिफिकेसन)',
+      'भरिएको आवेदन फारम'
+    ],
+    process: [
+      'नेपालपासपोर्ट.गोभ.नेपालमा अनलाइन आवेदन पेश गर्नुहोस्',
+      'निर्दिष्ट बैंकमा शुल्क तिर्नुहोस्',
+      'रसिद लिएर राहदानी विभाग वा जिल्ला प्रशासन कार्यालय जानुहोस्',
+      'बायोमेट्रिक डाटा प्रदान गर्नुहोस्',
+      'प्रक्रिया पूरा भएपछि राहदानी संकलन गर्नुहोस्'
+    ],
+    locations: [
+      'राहदानी विभाग, नारायणहिटी, काठमाडौं',
+      'नेपाल भरका जिल्ला प्रशासन कार्यालयहरू'
+    ],
+    contact: 'राहदानी विभाग: ०१-४४१६०१०, ०१-४४१६०११'
+  },
+  'driving-license': {
+    name: 'सवारी चालक अनुमतिपत्र',
+    requirements: [
+      'नागरिकता प्रमाणपत्र (मूल र फोटोकपी)',
+      'प्राधिकृत चिकित्सकबाट चिकित्सा प्रतिवेदन',
+      'रक्त समूह प्रमाणपत्र',
+      'फोटो सहित आवेदन फारम'
+    ],
+    process: [
+      'www.dotm.gov.np मा अनलाइन दर्ता गर्नुहोस्',
+      'निर्धारित मितिमा लिखित परीक्षा दिनुहोस्',
+      'लिखित परीक्षा पास भएमा व्यावहारिक ड्राइभिङ परीक्षा दिनुहोस्',
+      'शुल्क तिरेर अनुमतिपत्र संकलन गर्नुहोस्'
+    ],
+    locations: [
+      'नेपाल भरका यातायात व्यवस्थापन कार्यालयहरू'
+    ],
+    contact: 'यातायात व्यवस्थापन विभाग: ०१-४४७४९२१'
+  },
+  'pan': {
+    name: 'स्थायी लेखा नम्बर',
+    requirements: [
+      'नागरिकता प्रमाणपत्र (मूल र फोटोकपी)',
+      'व्यवसाय दर्ता प्रमाणपत्र (यदि लागू)',
+      'दुई वटा पासपोर्ट साइजको फोटो',
+      'आवेदन फारम'
+    ],
+    process: [
+      'प्यान दर्ता फारम भर्नुहोस्',
+      'नजिकैको कर कार्यालयमा पेश गर्नुहोस्',
+      'दर्ता शुल्क तिर्नुहोस्',
+      'प्यान प्रमाणपत्र प्राप्त गर्नुहोस्'
+    ],
+    locations: [
+      'नेपाल भरका आन्तरिक राजस्व कार्यालयहरू'
+    ],
+    contact: 'आन्तरिक राजस्व विभाग: ०१-४४१५८०२, ०१-४४१०३४०'
+  },
+  'nid': {
+    name: 'राष्ट्रिय परिचयपत्र',
+    requirements: [
+      'नागरिकता प्रमाणपत्र (मूल र फोटोकपी)',
+      'जन्म दर्ता प्रमाणपत्र',
+      'हालको पासपोर्ट साइजको फोटोहरू',
+      'भरिएको आवेदन फारम'
+    ],
+    process: [
+      'आवेदन फारम भर्नुहोस्',
+      'आवश्यक कागजातहरू लिएर राष्ट्रिय परिचयपत्र व्यवस्थापन केन्द्र जानुहोस्',
+      'बायोमेट्रिक डाटा सहित औंला छाप र फोटो प्रदान गर्नुहोस्',
+      'प्रक्रिया पूरा भएपछि राष्ट्रिय परिचयपत्र संकलन गर्नुहोस्'
+    ],
+    locations: [
+      'राष्ट्रिय परिचयपत्र व्यवस्थापन केन्द्र, काठमाडौं',
+      'जिल्ला प्रशासन कार्यालयहरू'
+    ],
+    contact: 'राष्ट्रिय परिचयपत्र व्यवस्थापन केन्द्र: ०१-४२११२१४'
+  }
 };
 
 // DOM Elements
@@ -309,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           // Use translated form name for Nepali language
           const formName = currentLanguage === 'nepali' && formTranslations[form.id] 
-            ? formTranslations[form.id] 
+            ? formTranslations[form.id].name 
             : form.name;
             
           // Translate requirements text for Nepali language
@@ -369,14 +462,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Store current form context
         currentFormContext = form.id;
         
-        // Update form details - use translated form name for Nepali
-        formTitle.textContent = currentLanguage === 'nepali' && formTranslations[form.id] 
-          ? formTranslations[form.id] 
+        // Update form details with translations if in Nepali
+        const translations = formTranslations[form.id];
+        formTitle.textContent = currentLanguage === 'nepali' && translations 
+          ? translations.name 
           : form.name;
         
         // Requirements
         requirementsList.innerHTML = '';
-        form.requirements.forEach(req => {
+        const requirements = currentLanguage === 'nepali' && translations 
+          ? translations.requirements 
+          : form.requirements;
+        requirements.forEach(req => {
           const li = document.createElement('li');
           li.textContent = req;
           requirementsList.appendChild(li);
@@ -384,7 +481,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Process
         processList.innerHTML = '';
-        form.process.forEach(step => {
+        const process = currentLanguage === 'nepali' && translations 
+          ? translations.process 
+          : form.process;
+        process.forEach(step => {
           const li = document.createElement('li');
           li.textContent = step;
           processList.appendChild(li);
@@ -392,21 +492,29 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Locations
         locationsList.innerHTML = '';
-        form.locations.forEach(location => {
+        const locations = currentLanguage === 'nepali' && translations 
+          ? translations.locations 
+          : form.locations;
+        locations.forEach(location => {
           const li = document.createElement('li');
           li.textContent = location;
           locationsList.appendChild(li);
         });
         
         // Contact
-        contactInfo.textContent = form.contact;
+        contactInfo.textContent = currentLanguage === 'nepali' && translations 
+          ? translations.contact 
+          : form.contact;
         
         // Show form detail view
         showFormDetail(form.id);
       })
       .catch(error => {
         console.error('Error loading form detail:', error);
-        alert('Failed to load form details. Please try again.');
+        const errorMsg = currentLanguage === 'nepali'
+          ? 'फारम विवरण लोड गर्दा त्रुटि भयो। कृपया फेरि प्रयास गर्नुहोस्।'
+          : 'Failed to load form details. Please try again.';
+        alert(errorMsg);
       });
   }
   

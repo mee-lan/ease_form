@@ -10,6 +10,9 @@ import sys
 import json
 import shutil
 
+# Environment variable for API Key
+NEPAL_FORMS_GEMINI_API_KEY = os.environ.get('NEPAL_FORMS_GEMINI_API_KEY')
+
 def print_header(text):
     """Print a formatted header"""
     print("\n" + "=" * 60)
@@ -90,13 +93,19 @@ def initialize_form_data():
     backend_data_path = os.path.join("backend", "data")
     os.makedirs(backend_data_path, exist_ok=True)
     
+    if not NEPAL_FORMS_GEMINI_API_KEY:
+        print("WARNING: NEPAL_FORMS_GEMINI_API_KEY environment variable not set.")
+        print("Form scraping will likely rely on fallback data or fail for AI generation.")
+        # Optionally, you could decide to exit or strictly use fallback here
+        # For now, we'll let it proceed and potentially use fallback in FormScraper
+
     try:
         # Try to run the form scraper
         print("Running form scraper to gather data...")
         from backend.form_scraper import FormScraper
         
-        API_KEY = "AIzaSyAqQkaP_uhlveaXWLUmZvojpYFF2aP5-KI"
-        scraper = FormScraper(api_key=API_KEY)
+        # API_KEY = "AIzaSyAqQkaP_uhlveaXWLUmZvojpYFF2aP5-KI" # OLD HARDCODED KEY
+        scraper = FormScraper(api_key=NEPAL_FORMS_GEMINI_API_KEY) # Use environment variable
         forms = scraper.scrape_all_forms()
         
         print(f"Scraped data for {len(forms)} forms.")

@@ -11,7 +11,8 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Configure the Gemini API
-GEMINI_API_KEY = "AIzaSyAqQkaP_uhlveaXWLUmZvojpYFF2aP5-KI"
+# GEMINI_API_KEY = "AIzaSyAqQkaP_uhlveaXWLUmZvojpYFF2aP5-KI" # OLD HARDCODED KEY
+GEMINI_API_KEY = os.environ.get('NEPAL_FORMS_GEMINI_API_KEY')
 GEMINI_MODEL = "gemini-1.5-flash"  # Model verified to exist
 
 # Global language preference
@@ -52,6 +53,14 @@ NEPALI_FALLBACK_CITIZENSHIP = """• नेपाली नागरिकता
 
 # Function to directly call Gemini API
 def call_gemini_api(prompt, system_message=None, language="english"):
+    if not GEMINI_API_KEY:
+        print("ERROR: NEPAL_FORMS_GEMINI_API_KEY environment variable not set. Cannot call Gemini API.")
+        # Return a user-friendly error or a specific fallback structure
+        if language.lower() == "nepali":
+            return "API कुञ्जी कन्फिगर गरिएको छैन। कृपया प्रशासकलाई सम्पर्क गर्नुहोस्।"
+        else:
+            return "API key is not configured. Please contact the administrator."
+
     try:
         url = f"https://generativelanguage.googleapis.com/v1/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
         

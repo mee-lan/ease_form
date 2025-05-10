@@ -103,6 +103,30 @@ const formTranslations = {
       'जिल्ला प्रशासन कार्यालयहरू'
     ],
     contact: 'राष्ट्रिय परिचयपत्र व्यवस्थापन केन्द्र: ०१-४२११२१४'
+  },
+  'loksewa': {
+    name: 'लोक सेवा आयोग दरखास्त फारम',
+    requirements: [
+      'नागरिकता प्रमाणपत्र (मूल र फोटोकपी)',
+      'हालसालै खिचिएको पासपोर्ट साइजको फोटो २ प्रति',
+      'शैक्षिक योग्यताका प्रमाणपत्रहरू (मूल र फोटोकपी)',
+      'कार्य अनुभवको प्रमाणपत्र (आवश्यक भएमा)',
+      'तालिम वा विशेष योग्यताका प्रमाणपत्रहरू (आवश्यक भएमा)',
+      'समावेशी समूहको प्रमाणपत्र (आवश्यक भएमा)'
+    ],
+    process: [
+      'लोक सेवा आयोगको वेबसाइट psc.gov.np मा गई अनलाइन दरखास्त फारम भर्नुहोस्',
+      'आवश्यक कागजातहरू स्क्यान गरी अपलोड गर्नुहोस्',
+      'तोकिएको परीक्षा दस्तुर अनलाइन भुक्तानी गर्नुहोस्',
+      'दरखास्त फारमको प्रिन्ट कपी लिनुहोस्',
+      'तोकिएको मितिमा प्रवेशपत्र डाउनलोड गर्नुहोस्'
+    ],
+    locations: [
+      'लोक सेवा आयोग केन्द्रीय कार्यालय, अनामनगर',
+      'लोक सेवा आयोगका क्षेत्रीय कार्यालयहरू',
+      'लोक सेवा आयोगका अञ्चल कार्यालयहरू'
+    ],
+    contact: 'लोक सेवा आयोग: ०१-४७७१५२८, टोल फ्री नम्बर: १६६०-०१-५०५५५'
   }
 };
 
@@ -522,6 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
     formDetail.classList.add('hidden');
     chatInterface.classList.add('hidden');
     templateGrid.parentElement.classList.remove('hidden');
+    formHelper.classList.remove('hidden'); // Show the form helper section again
     currentFormContext = null;
   }
   
@@ -536,6 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chatInterface.classList.remove('hidden');
     formDetail.classList.add('hidden');
     templateGrid.parentElement.classList.add('hidden');
+    formHelper.classList.add('hidden'); // Hide the form helper/detection section
     chatInput.focus();
     
     // Clear any existing messages
@@ -657,8 +683,8 @@ function addChatMessage(message, sender) {
         .then(response => response.json())
         .then(data => {
           if (data.detected) {
-            // Show form helper
-            detectedForm.querySelector('.form-name').textContent = data.form_type;
+            // Show form helper and set form name in lowercase
+            detectedForm.querySelector('.form-name').textContent = data.form_type.toUpperCase();
             formHelper.classList.remove('hidden');
             currentFormContext = data.form_type;
             

@@ -46,7 +46,7 @@ function detectForms() {
   const pageHTML = document.documentElement.outerHTML;
   
   // Send to backend for processing
-  fetch('http://localhost:5000/api/detect-form', {
+  fetch('http://127.0.0.1:5002/api/detect-form', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -57,8 +57,8 @@ function detectForms() {
   })
   .then(response => response.json())
   .then(data => {
-    if (data.detected) {
-      currentFormType = data.form_type;
+    if (data.detected && typeof data.form_type === 'string') {
+      currentFormType = data.form_type.toLowerCase(); // Normalize to lowercase
       formFields = data.form_fields;
       
       // Notify the extension popup about detected form
@@ -151,6 +151,31 @@ function showGuidanceTooltip(field, guidance) {
   const tooltip = document.createElement('div');
   tooltip.className = 'nepal-forms-tooltip';
   
+  // Create tooltip header with close button
+  const header = document.createElement('div');
+  header.className = 'nepal-forms-tooltip-header';
+  header.style.display = 'flex';
+  header.style.justifyContent = 'space-between';
+  header.style.alignItems = 'center';
+  header.style.marginBottom = '8px';
+  
+  const closeButton = document.createElement('button');
+  closeButton.innerHTML = '&times;';
+  closeButton.className = 'nepal-forms-tooltip-close';
+  closeButton.style.background = 'none';
+  closeButton.style.border = 'none';
+  closeButton.style.fontSize = '18px';
+  closeButton.style.cursor = 'pointer';
+  closeButton.style.padding = '0 4px';
+  closeButton.style.color = '#666';
+  closeButton.addEventListener('click', () => {
+    tooltip.remove();
+    field.guidanceTooltip = null;
+  });
+  
+  header.appendChild(closeButton);
+  tooltip.appendChild(header);
+  
   // Create tooltip content
   const content = document.createElement('div');
   content.innerHTML = `<p>${guidance}</p>`;
@@ -195,7 +220,7 @@ function addFloatingHelper() {
       <button class="nepal-forms-helper-close">&times;</button>
     </div>
     <div class="nepal-forms-helper-body">
-      <p>Need help with this ${currentFormType} form?</p>
+      <p>Need help with this ${currentFormType ? currentFormType.toUpperCase() : 'UNKNOWN'} form?</p>
       <button class="nepal-forms-helper-chat">Ask Assistant</button>
     </div>
   `;
@@ -254,6 +279,21 @@ function addHelperStyles() {
       font-size: 14px;
       line-height: 1.5;
       color: #1d3557;
+    }
+    
+    .nepal-forms-tooltip-close {
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    
+    .nepal-forms-tooltip-close:hover {
+      opacity: 1;
+    }
+    
+    .nepal-forms-tooltip-header {
+      border-bottom: 1px solid #ddd;
+      margin: -8px -8px 8px -8px;
+      padding: 4px 8px;
     }
     
     .nepal-forms-tooltip p {
@@ -322,11 +362,13 @@ function addHelperStyles() {
 
 // Activate the form helper with field information
 function activateFormHelper(formType, fields) {
-  currentFormType = formType;
-  formFields = fields;
-  
-  // Add helpers to form fields
-  addFieldHelpers();
+  if (typeof formType === 'string') {
+    currentFormType = formType.toLowerCase(); // Normalize to lowercase
+    formFields = fields;
+    
+    // Add helpers to form fields
+    addFieldHelpers();
+  }
 }
 
 // Send form field guidance request

@@ -142,6 +142,9 @@ function onFieldBlur(event) {
 
 // Show guidance tooltip for a field
 function showGuidanceTooltip(field, guidance) {
+  // Close all existing tooltips
+  closeAllTooltips();
+  
   // Remove existing tooltip if any
   if (field.guidanceTooltip) {
     field.guidanceTooltip.remove();
@@ -151,14 +154,31 @@ function showGuidanceTooltip(field, guidance) {
   const tooltip = document.createElement('div');
   tooltip.className = 'nepal-forms-tooltip';
   
-  // Create tooltip header with close button
-  const header = document.createElement('div');
-  header.className = 'nepal-forms-tooltip-header';
-  header.style.display = 'flex';
-  header.style.justifyContent = 'space-between';
-  header.style.alignItems = 'center';
-  header.style.marginBottom = '8px';
+  // Create tooltip content
+  const content = document.createElement('div');
+  content.innerHTML = `<p>${guidance}</p>`;
+  tooltip.appendChild(content);
   
+  // Create a container for the buttons
+  const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.justifyContent = 'space-between';
+  buttonContainer.style.alignItems = 'center';
+  buttonContainer.style.marginTop = '8px';
+
+  // Add a chat button
+  const chatButton = document.createElement('button');
+  chatButton.className = 'nepal-forms-chat-btn';
+  chatButton.textContent = 'Ask More Questions';
+  chatButton.addEventListener('click', () => {
+    chrome.runtime.sendMessage({
+      action: 'open_chat',
+      field_name: field.name || field.id || 'unknown',
+      form_type: currentFormType
+    });
+  });
+
+  // Add a close button
   const closeButton = document.createElement('button');
   closeButton.innerHTML = '&times;';
   closeButton.className = 'nepal-forms-tooltip-close';
@@ -166,40 +186,50 @@ function showGuidanceTooltip(field, guidance) {
   closeButton.style.border = 'none';
   closeButton.style.fontSize = '18px';
   closeButton.style.cursor = 'pointer';
-  closeButton.style.padding = '0 4px';
   closeButton.style.color = '#666';
+  closeButton.style.marginLeft = '12px';
   closeButton.addEventListener('click', () => {
     tooltip.remove();
     field.guidanceTooltip = null;
   });
-  
-  header.appendChild(closeButton);
-  tooltip.appendChild(header);
-  
-  // Create tooltip content
-  const content = document.createElement('div');
-  content.innerHTML = `<p>${guidance}</p>`;
-  tooltip.appendChild(content);
-  
-  // Add a chat button
-  const chatButton = document.createElement('button');
-  chatButton.className = 'nepal-forms-chat-btn';
-  chatButton.textContent = 'Ask More Questions';
-  chatButton.addEventListener('click', () => {
-    // Open popup with chat focused on this field
-    chrome.runtime.sendMessage({
-      action: 'open_chat',
-      field_name: field.name || field.id || 'unknown',
-      form_type: currentFormType
-    });
-  });
-  tooltip.appendChild(chatButton);
+
+  // Add both buttons to the container
+  buttonContainer.appendChild(chatButton);
+  buttonContainer.appendChild(closeButton);
+
+  // Add the button container to the tooltip
+  tooltip.appendChild(buttonContainer);
   
   // Position the tooltip near the field
   const fieldRect = field.getBoundingClientRect();
+  const margin = 16; // More space below the field
+  let left = fieldRect.left + window.scrollX;
+
+  // Temporarily add tooltip off-screen to measure its height
   tooltip.style.position = 'absolute';
-  tooltip.style.left = `${fieldRect.left}px`;
-  tooltip.style.top = `${fieldRect.bottom + window.scrollY + 5}px`;
+  tooltip.style.left = '-9999px';
+  tooltip.style.top = '-9999px';
+  document.body.appendChild(tooltip);
+  const tooltipRect = tooltip.getBoundingClientRect();
+
+  // Default: show below the field
+  let top = fieldRect.bottom + window.scrollY + margin;
+
+  // If not enough space below, show above the field
+  if (top + tooltipRect.height > window.scrollY + window.innerHeight) {
+    top = fieldRect.top + window.scrollY - tooltipRect.height - margin;
+    if (top < window.scrollY + margin) top = window.scrollY + margin;
+  }
+
+  // Prevent overflow right
+  if (left + tooltipRect.width > window.scrollX + window.innerWidth) {
+    left = window.scrollX + window.innerWidth - tooltipRect.width - margin;
+    if (left < margin) left = margin;
+  }
+
+  // Set final position
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${top}px`;
   tooltip.style.zIndex = '10000';
   
   // Add the tooltip to the page
@@ -279,6 +309,7 @@ function addHelperStyles() {
       font-size: 14px;
       line-height: 1.5;
       color: #1d3557;
+      z-index: 10001 !important;
     }
     
     .nepal-forms-tooltip-close {
@@ -355,6 +386,10 @@ function addHelperStyles() {
     .nepal-forms-helper-chat:hover {
       background-color: #d1323e;
     }
+    
+    .nepal-forms-floating-helper {
+      z-index: 10000 !important;
+    }
   `;
   
   document.head.appendChild(styles);
@@ -398,4 +433,8 @@ document.addEventListener('contextmenu', event => {
     // Mark this field for context menu
     activeField = event.target;
   }
-}); 
+});
+
+function closeAllTooltips() {
+  document.querySelectorAll('.nepal-forms-tooltip').forEach(tip => tip.remove());
+} 

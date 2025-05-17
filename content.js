@@ -55,7 +55,7 @@ function detectForms() {
       html: pageHTML
     })
   })
-  .then(response => response.json())
+  .then(response => response.json())      //Converts {"x": 1} to { x: 1 }
   .then(data => {
     if (data.detected && typeof data.form_type === 'string') {
       currentFormType = data.form_type.toLowerCase(); // Normalize to lowercase
@@ -437,4 +437,29 @@ document.addEventListener('contextmenu', event => {
 
 function closeAllTooltips() {
   document.querySelectorAll('.nepal-forms-tooltip').forEach(tip => tip.remove());
+}
+
+function autofillFormFields() {
+  chrome.storage.sync.get(['userDetails'], function(result) {
+    if (result.userDetails) {
+      const { name, phone, mobile, address } = result.userDetails;
+      
+      // Autofill logic
+      document.querySelectorAll('input').forEach(input => {
+        if (input.name.toLowerCase().includes('name')) {
+          input.value = name;
+        } else if (input.name.toLowerCase().includes('district')) {
+          input.value = district;
+        } else if (input.name.toLowerCase().includes('municipality')) {
+          input.value = municipality;
+        } else if (input.name.toLowerCase().includes('ward')) {
+          input.value = ward;
+        } else if (input.name.toLowerCase().includes('mobile')) {
+          input.value = mobile;
+        } else if (input.name.toLowerCase().includes('address')) {
+          input.value = address;
+        }
+      });
+    }
+  });
 } 

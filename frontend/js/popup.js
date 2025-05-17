@@ -827,4 +827,47 @@ function addChatMessage(message, sender) {
       fieldGuidance.innerHTML = errorMsg;
     });
   }
+
+  function showInputForm() {
+    // Hide other sections
+    chatInterface.classList.add('hidden');
+    formDetail.classList.add('hidden');
+    templateGrid.parentElement.classList.add('hidden');
+    formHelper.classList.add('hidden');
+    
+    // Show the input form
+    const inputForm = document.getElementById('input-form');
+    inputForm.classList.remove('hidden');
+    
+    // Focus on the first input field
+    const nameInput = document.getElementById('name');
+    if (nameInput) {
+      nameInput.focus();
+    }
+  }
+
+  // Add event listener to the 'Add/Edit' button
+  const addEditButton = document.getElementById('add-edit-btn');
+  if (addEditButton) {
+    addEditButton.addEventListener('click', showInputForm);
+  }
+
+  document.getElementById('details-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const name = document.getElementById('name').value;
+    const district = document.getElementById('district').value;
+    const municipality = document.getElementById('municipality').value;
+    const ward = document.getElementById('ward').value;
+    const mobile = document.getElementById('mobile','phoneNumber').value;
+    const address = document.getElementById('address').value;
+    
+    // Save details in Chrome storage
+    chrome.storage.sync.set({
+      userDetails: { name, district, municipality, ward, mobile, address }
+    }, function() {
+      console.log('Details saved:', { name, district, municipality, ward, mobile, address });
+      alert('Details saved successfully!');
+      document.getElementById('input-form').classList.add('hidden');
+    });
+  });
 }); 

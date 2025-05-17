@@ -277,9 +277,20 @@ function addFloatingHelper() {
   // Add event listener for chat button
   const chatButton = helper.querySelector('.nepal-forms-helper-chat');
   chatButton.addEventListener('click', () => {
+    // Close the floating helper
+    helper.remove();
+    formHelper = null;
+    
+    // Open chat
     chrome.runtime.sendMessage({
       action: 'open_chat',
       form_type: currentFormType
+    }, (response) => {
+      if (response && response.success) {
+        console.log('Chat interface opened successfully');
+      } else {
+        console.error('Failed to open chat interface');
+      }
     });
   });
   

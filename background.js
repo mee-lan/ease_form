@@ -37,6 +37,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'field_focus') {
     // Handle when a form field is focused - use debounced version
     debouncedUpdateFieldGuidance(message.field_name, message.form_type);
+  } else if (message.action === 'open_chat') {
+    // Open the extension popup
+    chrome.action.openPopup();
+    sendResponse({ success: true });
   } else if (message.action === 'get_field_guidance') {
     // Create a unique key for this request
     const requestKey = `${message.field_name}_${message.form_type}_${message.language || 'default'}`;

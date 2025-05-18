@@ -10,7 +10,8 @@ class FormDetector:
     def __init__(self, api_key=None, api_caller=None):
         self.api_key = api_key
         self.api_caller = api_caller
-        self.has_gemini = api_caller is not None
+        self.has_gemini = bool(api_key and api_caller)
+        print(f"FormDetector initialized with Gemini: {self.has_gemini}")
         
         if not self.has_gemini:
             print("Google Generative AI not available - using simplified form detection")
@@ -164,6 +165,13 @@ class FormDetector:
             str: Guidance text for filling out the field
         """
         try:
+            print(f"\n=== Field Guidance Request ===")
+            print(f"Field: {field_name}")
+            print(f"Form Type: {form_type}")
+            print(f"Language: {language}")
+            print(f"Has Gemini: {self.has_gemini}")
+            print(f"Has API Caller: {self.api_caller is not None}")
+            
             # Normalize field name for more consistent lookup
             field_display = field_name.replace('_', ' ').title()
             
@@ -171,49 +179,62 @@ class FormDetector:
             if self.has_gemini and self.api_caller:
                 language = language.lower()
                 if language == 'nepali':
-                    nepali_prompt = f"""
+                    system_prompt = """
                     तपाईं एक नेपाली सरकारी फारम भर्न सहयोग गर्ने सहायक हुनुहुन्छ।
+                    तपाईंको उत्तर केवल नेपाली भाषामा, देवनागरी लिपिमा दिनुहोस्।
+                    अंग्रेजी शब्दहरू प्रयोग नगर्नुहोस्।
+                    प्रत्येक बुँदा "• " बाट सुरु गर्नुहोस्।
+                    उत्तर छोटो र स्पष्ट राख्नुहोस् (१-२ वाक्य)।
+                    """
+                    user_prompt = f"""
                     फारम प्रकार: {form_type}
                     फिल्ड: {field_display}
-                    
-                    निर्देशन:
-                    1. यो फिल्डमा के लेख्नुपर्छ भन्ने बारेमा स्पष्ट र संक्षिप्त सल्लाह दिनुहोस्।
-                    2. उत्तर केवल नेपाली भाषामा, देवनागरी लिपिमा दिनुहोस्।
-                    3. प्रत्येक बुँदा "• " बाट सुरु गर्नुहोस्।
-                    4. १-२ वाक्य मात्र प्रयोग गर्नुहोस्।
+                    यो फिल्डमा के लेख्नुपर्छ?
                     """
+                    print("\nCalling Gemini API with:")
+                    print(f"System Prompt: {system_prompt}")
+                    print(f"User Prompt: {user_prompt}")
+                    
                     guidance = self.api_caller(
-                        prompt=nepali_prompt,
+                        prompt=user_prompt,
+                        system_message=system_prompt,
                         language='nepali',
                         form_type=form_type,
                         field_display=field_display
                     )
+                    print(f"\nAPI Response: {guidance}")
+                    
                     nepali_chars = re.findall(r'[\u0900-\u097F]', guidance) if guidance else []
                     if guidance and nepali_chars and len(nepali_chars) >= 10:
+                        print("Valid Nepali response received")
                         return guidance.strip()
                     else:
                         print("AI didn't generate proper Nepali response")
                         return self._get_field_specific_fallback(field_display, form_type, language)
                 else:
-                    prompt = f"""
-                    You are a form filling assistant. Provide guidance for the following field:
-                    Form Type: {form_type}
-                    Field Name: {field_display}
-                    
+                    system_prompt = """
+                    You are a form filling assistant. Provide guidance for the following field.
                     Instructions:
                     1. Be specific about what information should be entered
                     2. Keep guidance brief (1-2 sentences)
                     3. Start each point with "• "
                     4. Focus on practical guidance
                     """
+                    user_prompt = f"""
+                    Form Type: {form_type}
+                    Field Name: {field_display}
+                    What should be entered in this field?
+                    """
                     guidance = self.api_caller(
-                        prompt=prompt,
+                        prompt=user_prompt,
+                        system_message=system_prompt,
                         language='english',
                         form_type=form_type,
                         field_display=field_display
                     )
                     if guidance and '•' in guidance and len(guidance) > 10:
                         return guidance.strip()
+            print("\nUsing fallback response")
             # If AI is not available or returns invalid response, use field-specific fallback
             return self._get_field_specific_fallback(field_display, form_type, language)
         except Exception as e:

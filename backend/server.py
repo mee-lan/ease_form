@@ -63,32 +63,18 @@ def call_gemini_api(prompt, system_message=None, language="english", form_type=N
         url = f"https://generativelanguage.googleapis.com/v1/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
         headers = {"Content-Type": "application/json"}
 
-        if language.lower() == "nepali":
-            nepali_prompt = f"""
-            तपाईं एक नेपाली सरकारी फारम भर्न सहयोग गर्ने सहायक हुनुहुन्छ।
-            फारम प्रकार: {form_type}
-            फिल्ड: {field_display}
-            
-            निर्देशन:
-            1. यो फिल्डमा के लेख्नुपर्छ भन्ने बारेमा स्पष्ट र संक्षिप्त सल्लाह दिनुहोस्।
-            2. उत्तर केवल नेपाली भाषामा, देवनागरी लिपिमा दिनुहोस्।
-            3. प्रत्येक बुँदा "• " बाट सुरु गर्नुहोस्।
-            4. १-२ वाक्य मात्र प्रयोग गर्नुहोस्।
-            """
-            return _make_api_call(url, headers, nepali_prompt)
+        # Combine system message and prompt for the API call
+        if system_message:
+            if language.lower() == "nepali":
+                full_prompt = f"{system_message}\n\nप्रश्न: {prompt}"
+            else:
+                full_prompt = f"{system_message}\n\nQuestion: {prompt}"
         else:
-            # English response - use original prompt
-            return _make_api_call(url, headers, prompt)
-    except Exception as e:
-        print(f"Error calling Gemini API: {e}")
-        return None
+            full_prompt = prompt
 
-def _make_api_call(url, headers, prompt):
-    """Helper function to make the actual API call"""
-    try:
         contents = [
             {
-                "parts": [{"text": prompt}],
+                "parts": [{"text": full_prompt}],
                 "role": "user"
             }
         ]
@@ -104,32 +90,77 @@ def _make_api_call(url, headers, prompt):
         }
         
         response = requests.post(url, headers=headers, json=data)
-        
         if response.status_code == 200:
             result = response.json()
             if "candidates" in result and len(result["candidates"]) > 0:
                 content = result["candidates"][0]["content"]
                 if "parts" in content and len(content["parts"]) > 0:
                     return content["parts"][0]["text"]
-        
         return None
     except Exception as e:
-        print(f"Error in API call: {e}")
+        print(f"Error calling Gemini API: {e}")
         return None
 
 # Check if Gemini API is available
 has_gemini = False
 try:
     # Test API with a simple call
-    result = call_gemini_api("Hello, respond with 'API is working' if you can read this.")
-    if result and "API is working" in result:
-        has_gemini = True
-        print("\n==================================================")
-        print("✅ Gemini API initialized successfully using direct API calls")
-        print("==================================================\n")
-        print("Server is running with FULL AI features enabled.")
+    print("\n=== Testing Gemini API ===")
+    print(f"API Key present: {bool(GEMINI_API_KEY)}")
+    print(f"Model: {GEMINI_MODEL}")
+    
+    # Use a simple test prompt
+    test_prompt = """
+    You are a helpful assistant. Please respond with 'API is working' if you can read this message.
+    This is a test to verify the API connection.
+    """
+    
+    url = f"https://generativelanguage.googleapis.com/v1/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    
+    contents = [
+        {
+            "parts": [{"text": test_prompt}],
+            "role": "user"
+        }
+    ]
+    
+    data = {
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.7,
+            "topP": 0.95,
+            "topK": 40,
+            "maxOutputTokens": 1024
+        }
+    }
+    
+    response = requests.post(url, headers=headers, json=data)
+    print(f"Test API response status: {response.status_code}")
+    print(f"Test API response body: {response.text}")
+    
+    if response.status_code == 200:
+        result = response.json()
+        if "candidates" in result and len(result["candidates"]) > 0:
+            content = result["candidates"][0]["content"]
+            if "parts" in content and len(content["parts"]) > 0:
+                result = content["parts"][0]["text"]
+                print(f"Test API response: {result}")
+                
+                if "API is working" in result:
+                    has_gemini = True
+                    print("\n==================================================")
+                    print("✅ Gemini API initialized successfully using direct API calls")
+                    print("==================================================\n")
+                    print("Server is running with FULL AI features enabled.")
+                else:
+                    raise Exception("Test API call failed - unexpected response")
+            else:
+                raise Exception("Test API call failed - no content parts")
+        else:
+            raise Exception("Test API call failed - no candidates")
     else:
-        raise Exception("Test API call failed")
+        raise Exception(f"Test API call failed - status code {response.status_code}")
 except Exception as e:
     print("\n==================================================")
     print(f"⚠️  RUNNING IN FALLBACK MODE - Gemini API not available: {e}")
@@ -335,25 +366,24 @@ def chat():
         if has_gemini:
             try:
                 # Prepare context for the model
-                system_prompt = """
-                You are an assistant helping non-tech-savvy users with Nepali governmental forms.
-                Provide simple, clear instructions and guidance for form filling.
-                Use simple language and avoid technical terms.
-                 The response should be in point  form not in paragraph
-                Always provide accurate information about document requirements, office locations, and procedures.
-                """
-                
-                # Add language requirement to the system prompt
                 if language.lower() == "nepali":
-                    system_prompt += """
-                    YOU MUST RESPOND IN NEPALI LANGUAGE ONLY. 
-                    This is CRITICALLY IMPORTANT. Do not use English at all.
-                    Your entire response must be in Nepali script.
-                    Translate all information to Nepali before responding.
-                    
+                    system_prompt = """
+                    तपाईं नेपाली सरकारी फारमहरूमा सहयोग गर्ने सहायक हुनुहुन्छ।
+                    तपाईंको उत्तर केवल नेपाली भाषामा, देवनागरी लिपिमा दिनुहोस्।
+                    अंग्रेजी शब्दहरू प्रयोग नगर्नुहोस्।
+                    प्रत्येक बुँदा "• " बाट सुरु गर्नुहोस्।
+                    उत्तर छोटो र स्पष्ट राख्नुहोस् (१-२ वाक्य)।
+                    सबै जानकारी नेपालीमा अनुवाद गर्नुहोस्।
                     """
                 else:
-                    system_prompt += "\nYOU MUST RESPOND IN ENGLISH LANGUAGE ONLY. Do not use Nepali."
+                    system_prompt = """
+                    You are an assistant helping non-tech-savvy users with Nepali governmental forms.
+                    Provide simple, clear instructions and guidance for form filling.
+                    Use simple language and avoid technical terms.
+                    The response should be in point form not in paragraph.
+                    Always provide accurate information about document requirements, office locations, and procedures.
+                    YOU MUST RESPOND IN ENGLISH LANGUAGE ONLY. Do not use Nepali.
+                    """
                 
                 prompt = user_message
                 if form_context:
@@ -363,13 +393,22 @@ def chat():
                     
                     if form_info:
                         # Extract relevant form info for context
-                        context_details = f"""
-                        Form: {form_info['name']}
-                        Requirements: {', '.join(form_info['requirements'])}
-                        Process: {', '.join(form_info['process'])}
-                        Locations: {', '.join(form_info['locations'])}
-                        Contact: {form_info['contact']}
-                        """
+                        if language.lower() == "nepali":
+                            context_details = f"""
+                            फारम: {form_info['name']}
+                            आवश्यकताहरू: {', '.join(form_info['requirements'])}
+                            प्रक्रिया: {', '.join(form_info['process'])}
+                            स्थानहरू: {', '.join(form_info['locations'])}
+                            सम्पर्क: {form_info['contact']}
+                            """
+                        else:
+                            context_details = f"""
+                            Form: {form_info['name']}
+                            Requirements: {', '.join(form_info['requirements'])}
+                            Process: {', '.join(form_info['process'])}
+                            Locations: {', '.join(form_info['locations'])}
+                            Contact: {form_info['contact']}
+                            """
                         prompt = f"Context: User is filling a {form_info['name']} form.\nForm details: {context_details}\nQuestion: {user_message}"
                     else:
                         prompt = f"Context: User is filling a {form_context} form.\nQuestion: {user_message}"
@@ -390,12 +429,10 @@ def chat():
                         
                         # Add a stronger instruction
                         reinforced_system_prompt = system_prompt + """
-                        CRITICAL INSTRUCTION: Your response MUST be in Nepali script ONLY.
-                        Translate ALL content to Nepali, regardless of the input language.
-                        DO NOT use English in your response at all.
-                        
-                        Even though the user's question is in English, I must respond ONLY in Nepali.
-                        I will write my entire response in the Nepali language using Devanagari script.
+                        महत्त्वपूर्ण निर्देशन: तपाईंको उत्तर नेपाली भाषामा मात्र हुनुपर्छ।
+                        सबै जानकारी नेपालीमा अनुवाद गर्नुहोस्।
+                        अंग्रेजी प्रयोग नगर्नुहोस्।
+                        प्रत्येक बुँदा "• " बाट सुरु गर्नुहोस्।
                         """
                         
                         # Retry with reinforced prompt

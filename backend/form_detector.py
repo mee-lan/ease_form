@@ -89,7 +89,7 @@ class FormDetector:
                 - Lok Sewa (Public Service Commission application)
                 
                 If it's one of these forms, respond with just the form type in lowercase.
-                If it's not one of these forms, respond with 'unknown'.
+                If it's not one of these forms, respond with what might be the webpage's name in max 3 words.
                 
                 Text: {form_titles[:1000]}
                 """
@@ -144,8 +144,7 @@ class FormDetector:
         
         # Try to find nearby text
         if field_name:
-            # This is a simplified approach - in a real implementation 
-            # we would use more sophisticated proximity detection
+
             nearby_text = soup.find('label', string=re.compile(field_name, re.IGNORECASE))
             if nearby_text:
                 return nearby_text.get_text().strip()
@@ -166,51 +165,57 @@ class FormDetector:
         """
         try:
             # Normalize field name for more consistent lookup
-            field_display = field_name.replace('_', ' ').lower()
+            field_display = field_name.replace('_', ' ').title()
             
             # Only proceed with AI if we have access
             if self.has_gemini and self.api_caller:
-                # Create a prompt for the AI based on language
                 language = language.lower()
-                
                 if language == 'nepali':
-                    prompt = f"""
-                    नेपाली भाषामा सरकारी फारमको फिल्डको लागि विशिष्ट मार्गदर्शन प्रदान गर्नुहोस्।
-                    
+                    nepali_prompt = f"""
+                    तपाईं एक नेपाली सरकारी फारम भर्न सहयोग गर्ने सहायक हुनुहुन्छ।
                     फारम प्रकार: {form_type}
-                    फिल्ड नाम: "{field_display}"
+                    फिल्ड: {field_display}
                     
                     निर्देशन:
-                    1. यो फिल्डमा के प्रविष्ट गर्नुपर्छ भन्ने बारे विशिष्ट जानकारी प्रदान गर्नुहोस्
-                    2. निर्देशन छोटो (2-3 वाक्य) र स्पष्ट राख्नुहोस्
-                    3. हरेक बुँदा "• " बाट सुरु गर्नुहोस्
-                    4. यो फिल्डसँग सम्बन्धित कुनै महत्त्वपूर्ण जानकारी समावेश गर्नुहोस्
-                    
-                    अत्यन्त महत्त्वपूर्ण: तपाईंको उत्तर अनिवार्य रूपमा र पूर्ण रूपमा नेपाली भाषामा हुनुपर्छ।
+                    1. यो फिल्डमा के लेख्नुपर्छ भन्ने बारेमा स्पष्ट र संक्षिप्त सल्लाह दिनुहोस्।
+                    2. उत्तर केवल नेपाली भाषामा, देवनागरी लिपिमा दिनुहोस्।
+                    3. प्रत्येक बुँदा "• " बाट सुरु गर्नुहोस्।
+                    4. १-२ वाक्य मात्र प्रयोग गर्नुहोस्।
                     """
-                else:  # Default to English
+                    guidance = self.api_caller(
+                        prompt=nepali_prompt,
+                        language='nepali',
+                        form_type=form_type,
+                        field_display=field_display
+                    )
+                    nepali_chars = re.findall(r'[\u0900-\u097F]', guidance) if guidance else []
+                    if guidance and nepali_chars and len(nepali_chars) >= 10:
+                        return guidance.strip()
+                    else:
+                        print("AI didn't generate proper Nepali response")
+                        return self._get_field_specific_fallback(field_display, form_type, language)
+                else:
                     prompt = f"""
-                    Provide specific guidance for filling the "{field_display}" field in a {form_type} form.
+                    You are a form filling assistant. Provide guidance for the following field:
+                    Form Type: {form_type}
+                    Field Name: {field_display}
                     
                     Instructions:
-                    1. Be specific about what information should be entered in this field
-                    2. Keep guidance brief (2-3 sentences) and clear
+                    1. Be specific about what information should be entered
+                    2. Keep guidance brief (1-2 sentences)
                     3. Start each point with "• "
-                    4. Include any important considerations related to this field
-                    
-                    Keep your answer focused on practical guidance for filling this specific field.
+                    4. Focus on practical guidance
                     """
-                
-                # Get AI-generated guidance
-                guidance = self.api_caller(prompt)
-                
-                # Simple validation - check if it has bullet points and is not too short
-                if guidance and '•' in guidance and len(guidance) > 20:
-                    return guidance.strip()
-            
+                    guidance = self.api_caller(
+                        prompt=prompt,
+                        language='english',
+                        form_type=form_type,
+                        field_display=field_display
+                    )
+                    if guidance and '•' in guidance and len(guidance) > 10:
+                        return guidance.strip()
             # If AI is not available or returns invalid response, use field-specific fallback
             return self._get_field_specific_fallback(field_display, form_type, language)
-                
         except Exception as e:
             print(f"Error generating field guidance: {e}")
             # Generic fallback in case of error

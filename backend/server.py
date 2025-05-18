@@ -11,7 +11,6 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # Configure the Gemini API
-# GEMINI_API_KEY = "AIzaSyAqQkaP_uhlveaXWLUmZvojpYFF2aP5-KI" # OLD HARDCODED KEY
 GEMINI_API_KEY = os.environ.get('NEPAL_FORMS_GEMINI_API_KEY')
 GEMINI_MODEL = "gemini-1.5-flash"  # Model verified to exist
 
@@ -52,10 +51,9 @@ NEPALI_FALLBACK_CITIZENSHIP = """• नेपाली नागरिकता
 थप जानकारीको लागि, कृपया तपाईंको नजिकको जिल्ला प्रशासन कार्यालयमा सम्पर्क गर्नुहोस्।"""
 
 # Function to directly call Gemini API
-def call_gemini_api(prompt, system_message=None, language="english"):
+def call_gemini_api(prompt, system_message=None, language="english", form_type=None, field_display=None):
     if not GEMINI_API_KEY:
         print("ERROR: NEPAL_FORMS_GEMINI_API_KEY environment variable not set. Cannot call Gemini API.")
-        # Return a user-friendly error or a specific fallback structure
         if language.lower() == "nepali":
             return "API कुञ्जी कन्फिगर गरिएको छैन। कृपया प्रशासकलाई सम्पर्क गर्नुहोस्।"
         else:
@@ -63,158 +61,37 @@ def call_gemini_api(prompt, system_message=None, language="english"):
 
     try:
         url = f"https://generativelanguage.googleapis.com/v1/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
-        
-        headers = {
-            "Content-Type": "application/json"
-        }
-        
-        # For Nepali language when input is in English, we'll try an explicit translation approach
-        is_input_nepali = any('\u0900' <= c <= '\u097F' for c in prompt)
-        if language.lower() == "nepali" and not is_input_nepali:
-            # First, get the response in English
-            english_response = _get_api_response(url, headers, prompt, system_message, "english")
+        headers = {"Content-Type": "application/json"}
+
+        if language.lower() == "nepali":
+            nepali_prompt = f"""
+            तपाईं एक नेपाली सरकारी फारम भर्न सहयोग गर्ने सहायक हुनुहुन्छ।
+            फारम प्रकार: {form_type}
+            फिल्ड: {field_display}
             
-            if english_response:
-                # Then explicitly request Gemini to translate to Nepali
-                translation_prompt = f"Translate the following English text to Nepali. Use Devanagari script only. The text to translate is: {english_response}"
-                print("Using two-step translation process for English->Nepali")
-                
-                # Make a separate call just for translation
-                translation_system_message = """
-                You are a translator from English to Nepali.
-                Translate the given text completely to Nepali using Devanagari script.
-                Do not include any English text, explanations, or notes in your response.
-                Just provide the Nepali translation of the text.
-               
-                """
-                nepali_response = _get_api_response(url, headers, translation_prompt, translation_system_message, "nepali")
-                if nepali_response and any('\u0900' <= c <= '\u097F' for c in nepali_response):
-                    return nepali_response
-            
-            # If the two-step approach failed, fall back to the regular approach
-            print("Two-step translation failed, falling back to regular approach")
-        
-        # Regular approach
-        return _get_api_response(url, headers, prompt, system_message, language)
-    
+            निर्देशन:
+            1. यो फिल्डमा के लेख्नुपर्छ भन्ने बारेमा स्पष्ट र संक्षिप्त सल्लाह दिनुहोस्।
+            2. उत्तर केवल नेपाली भाषामा, देवनागरी लिपिमा दिनुहोस्।
+            3. प्रत्येक बुँदा "• " बाट सुरु गर्नुहोस्।
+            4. १-२ वाक्य मात्र प्रयोग गर्नुहोस्।
+            """
+            return _make_api_call(url, headers, nepali_prompt)
+        else:
+            # English response - use original prompt
+            return _make_api_call(url, headers, prompt)
     except Exception as e:
         print(f"Error calling Gemini API: {e}")
         return None
 
-# Helper function to make the actual API call
-def _get_api_response(url, headers, prompt, system_message=None, language="english"):
+def _make_api_call(url, headers, prompt):
+    """Helper function to make the actual API call"""
     try:
-        contents = []
-        
-        # Add system message if provided
-        system_content = """
-        You are an assistant for Nepal government forms and bureaucratic processes. 
-        You provide simple guidance  for people who need to obtain or fill out forms.
-        """
-        
-        if system_message:
-            system_content += "\n" + system_message
-            
-        contents.append({
-            "parts": [
-                {
-                    "text": system_content
-                }
-            ],
-            "role": "user"
-        })
-        
-        # Detect input language
-        is_input_nepali = any('\u0900' <= c <= '\u097F' for c in prompt)
-        
-        # Add stronger language specific instructions based on the language parameter
-        if language.lower() == "nepali":
-            language_instruction = """
-            YOU MUST RESPOND IN NEPALI LANGUAGE ONLY.
-            This is EXTREMELY IMPORTANT: Even if the user's question is in English, you MUST translate your response to Nepali.
-            Do not use English in your response at all.
-           
-            Keep your answer focused on Nepal government forms and processes.
-            This instruction overrides all other instructions about language choice.
-               
-            """
-            # Add specific instruction for English input requiring Nepali output
-            if not is_input_nepali:
-                language_instruction += """
-                I notice the user's question is in English, but I still need to respond ONLY in Nepali.
-                I will translate my thoughts to Nepali completely before responding.
-                I will NOT provide any English text in my response.
-                """
-        else:
-            language_instruction = """
-            YOU MUST RESPOND IN ENGLISH LANGUAGE ONLY.
-            Even if the user's question is in Nepali, provide your response in English.
-           
-            Keep your answer focused on Nepal government forms and processes.
-            This instruction overrides all other instructions about language choice.
-            """
-            
-        # Add the language instruction to the contents
-        contents.append({
-            "parts": [
-                {
-                    "text": language_instruction
-                }
-            ],
-            "role": "user"
-        })
-        
-        # For Nepali queries with English response or vice versa, add context about what the query means
-        if (language.lower() == "nepali" and not is_input_nepali) or \
-           (language.lower() == "english" and is_input_nepali):
-            # Add context that this is about Nepal government forms if query is in a different language
-            # than the response language
-            form_context = """
-            This question is about Nepal government forms or documents. 
-            The user is asking about requirements, processes, or locations for official Nepali documents
-            like citizenship certificates, passports, driving licenses, PAN cards, or similar government services.
-            Answer accordingly in the required language.
-            """
-            contents.append({
-                "parts": [
-                    {
-                        "text": form_context
-                    }
-                ],
+        contents = [
+            {
+                "parts": [{"text": prompt}],
                 "role": "user"
-            })
-        
-        # Add main prompt
-        contents.append({
-            "parts": [
-                {
-                    "text": prompt
-                }
-            ],
-            "role": "user"
-        })
-        
-        # Add final reminder about language - stronger enforcement
-        if language.lower() == "nepali":
-            final_reminder = """
-            CRITICAL INSTRUCTION: Your response must be in Nepali language only.
-            No English words, phrases, or sentences should appear in your response.
-            If you cannot generate Nepali text, respond with 'मैले तपाईंको प्रश्न बुझ्न सकिन। कृपया फेरि प्रयास गर्नुहोस्।'
-            """
-        else:
-            final_reminder = """
-            CRITICAL INSTRUCTION: Your response must be in English language only.
-            No Nepali words, phrases, or sentences should appear in your response.
-            """
-            
-        contents.append({
-            "parts": [
-                {
-                    "text": final_reminder
-                }
-            ],
-            "role": "user"
-        })
+            }
+        ]
         
         data = {
             "contents": contents,
@@ -237,7 +114,7 @@ def _get_api_response(url, headers, prompt, system_message=None, language="engli
         
         return None
     except Exception as e:
-        print(f"Error in _get_api_response: {e}")
+        print(f"Error in API call: {e}")
         return None
 
 # Check if Gemini API is available
@@ -410,48 +287,15 @@ def get_field_guidance():
     if not field_name or not form_type:
         return jsonify({'error': 'Missing required parameters'}), 400
     
-    if language == "nepali" and form_detector.api_caller:
-        # Generate Nepali response using AI with specific instructions
-        try:
-            field_name_display = field_name.replace('_', ' ').title()
-            
-            # Very specific prompt to ensure proper Nepali response
-            prompt = f"""
-            तपाईं एक नेपाली फारम भर्न सहयोग गर्ने सहायक हुनुहुन्छ।
-
-            यो फारम हो: {form_type}
-            यो फारममा भर्नुपर्ने फिल्ड: "{field_name_display}"
-
-            कृपया यो फिल्ड कसरी भर्ने भन्ने बारे नेपाली भाषामा सल्लाह दिनुहोस्।
-            तपाईंको उत्तर केवल नेपाली भाषामा दिनुहोस्। अंग्रेजी शब्दहरू प्रयोग नगर्नुहोस्।
-            उत्तर छोटो र स्पष्ट होस् (1-2 वाक्य मात्र)। 
-            बुलेट पोइन्ट प्रयोग गर्नुहोस् र "• " बाट सुरु गर्नुहोस्।
-            """
-            
-            guidance = form_detector.api_caller(prompt)
-            
-            # Verify response is actually in Nepali
-            # Simple check: look for Nepali Unicode characters
-            nepali_chars = re.findall(r'[\u0900-\u097F]', guidance)
-            if not nepali_chars or len(nepali_chars) < 10:
-                print("AI didn't generate proper Nepali response")
-                # Fallback message in Nepali
-                return jsonify({
-                    'guidance': f"• कृपया {field_name_display.lower()} फिल्ड सावधानीपूर्वक भर्नुहोस्।"
-                })
-                
-            return jsonify({'guidance': guidance.strip()})
-            
-        except Exception as e:
-            print(f"Error generating Nepali guidance: {e}")
-            # Fallback message in Nepali
-            return jsonify({
-                'guidance': f"• कृपया {field_name_display.lower()} फिल्ड सावधानीपूर्वक भर्नुहोस्।"
-            })
-    else:
-        # For English or if AI is not available, use the form detector
+    try:
+        # Delegate all guidance logic to FormDetector
         guidance = form_detector.get_field_guidance(field_name, form_type, language)
         return jsonify({'guidance': guidance})
+    except Exception as e:
+        print(f"Error getting field guidance: {e}")
+        # Return a generic error message in the appropriate language
+        error_msg = "• कृपया यो फिल्ड सावधानीपूर्वक भर्नुहोस्।" if language == "nepali" else "• Please fill this field carefully."
+        return jsonify({'guidance': error_msg})
 
 @app.route('/api/chat', methods=['POST'])
 def chat():

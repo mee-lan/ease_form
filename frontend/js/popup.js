@@ -34,7 +34,7 @@ const formTranslations = {
       'भरिएको आवेदन फारम'
     ],
     process: [
-      'नेपालपासपोर्ट.गोभ.नेपालमा अनलाइन आवेदन पेश गर्नुहोस्',
+      ' www.dotm.gov.np वा applydlnew.dotm.gov.np/login मा अनलाइन आवेदन पेश गर्नुहोस्',
       'निर्दिष्ट बैंकमा शुल्क तिर्नुहोस्',
       'रसिद लिएर राहदानी विभाग वा जिल्ला प्रशासन कार्यालय जानुहोस्',
       'बायोमेट्रिक डाटा प्रदान गर्नुहोस्',
@@ -74,7 +74,7 @@ const formTranslations = {
       'आवेदन फारम'
     ],
     process: [
-      'प्यान दर्ता फारम भर्नुहोस्',
+      'प्यान दर्ता फारम भर्नुहोस् ird.gov.np वा taxpayerportal.ird.gov.np/taxpayer/app.html',
       'नजिकैको कर कार्यालयमा पेश गर्नुहोस्',
       'दर्ता शुल्क तिर्नुहोस्',
       'प्यान प्रमाणपत्र प्राप्त गर्नुहोस्'
@@ -93,7 +93,7 @@ const formTranslations = {
       'भरिएको आवेदन फारम'
     ],
     process: [
-      'आवेदन फारम भर्नुहोस्',
+      'enrollment.donidcr.gov.np/PreEnrollment मा आवेदन फारम भर्नुहोस् ',
       'आवश्यक कागजातहरू लिएर राष्ट्रिय परिचयपत्र व्यवस्थापन केन्द्र जानुहोस्',
       'बायोमेट्रिक डाटा सहित औंला छाप र फोटो प्रदान गर्नुहोस्',
       'प्रक्रिया पूरा भएपछि राष्ट्रिय परिचयपत्र संकलन गर्नुहोस्'
@@ -510,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
           : form.process;
         process.forEach(step => {
           const li = document.createElement('li');
-          li.textContent = step;
+          li.innerHTML = linkify(step);
           processList.appendChild(li);
         });
         
@@ -870,4 +870,17 @@ function addChatMessage(message, sender) {
       document.getElementById('input-form').classList.add('hidden');
     });
   });
+
+  function linkify(text) {
+    // This regex matches most URLs, including subdomains and paths
+    const urlRegex = /((https?:\/\/)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(\/[^\s,]*)?)/g;
+    return text.replace(urlRegex, function(url) {
+      let href = url;
+      // Add protocol if missing
+      if (!href.match(/^https?:\/\//)) {
+        href = 'https://' + href;
+      }
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
+  }
 }); 

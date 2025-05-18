@@ -104,7 +104,6 @@ def initialize_form_data():
         print("Running form scraper to gather data...")
         from backend.form_scraper import FormScraper
         
-        # API_KEY = "AIzaSyAqQkaP_uhlveaXWLUmZvojpYFF2aP5-KI" # OLD HARDCODED KEY
         scraper = FormScraper(api_key=NEPAL_FORMS_GEMINI_API_KEY) # Use environment variable
         forms = scraper.scrape_all_forms()
         

@@ -533,7 +533,11 @@ class FormScraper:
             print(f"Error saving forms: {e}")
 
 if __name__ == "__main__":
-    API_KEY = "AIzaSyAqQkaP_uhlveaXWLUmZvojpYFF2aP5-KI"
-    scraper = FormScraper(api_key=API_KEY)
+    # Instead, use environment variable
+    api_key = os.environ.get('NEPAL_FORMS_GEMINI_API_KEY')
+    if not api_key:
+        print("WARNING: NEPAL_FORMS_GEMINI_API_KEY environment variable not set.")
+        print("Running in fallback mode without AI features.")
+    scraper = FormScraper(api_key=api_key)
     forms = scraper.scrape_all_forms()
     print(f"Scraped {len(forms)} forms") 

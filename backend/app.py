@@ -7,10 +7,6 @@
 
 # app = Flask(__name__)
 
-# # Configure the Gemini API
-# GEMINI_API_KEY = "AIzaSyAqQkaP_uhlveaXWLUmZvojpYFF2aP5-KI"
-# genai.configure(api_key=GEMINI_API_KEY)
-
 # # Load form data from JSON files
 # def load_form_data():
 #     with open('data/forms.json', 'r', encoding='utf-8') as f:

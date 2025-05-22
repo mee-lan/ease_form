@@ -1,4 +1,6 @@
 # Nepal Forms Assistant - Chrome Extension
+![Nepal Forms Assistant Banner](icons/banner.png)
+
 
 A Chrome browser extension that assists non-tech-savvy users in filling Nepali governmental forms with real-time guidance, AI-powered chatbot, and form templates.
 

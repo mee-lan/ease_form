@@ -1,7 +1,4 @@
-// Content script for Nepal Forms Assistant
-// This script runs on the web page and interacts with forms
 
-// Variables
 let formHelper = null;
 let currentFormType = null;
 let formFields = {};
@@ -11,7 +8,7 @@ let activeField = null;
 init();
 
 function init() {
-  // Listen for messages from the background script or popup
+
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'scan_for_forms') {
       // Scan the page for forms
@@ -23,11 +20,11 @@ function init() {
       sendResponse({ success: true });
     }
     
-    // Return true to indicate we're handling response asynchronously
+
     return true;
   });
   
-  // Add document click handler to close tooltips when clicking outside
+
   document.addEventListener('click', function(event) {
     // Check if click is outside any form field or tooltip
     if (!event.target.closest('input, select, textarea, .nepal-forms-tooltip')) {
@@ -36,16 +33,16 @@ function init() {
     }
   });
   
-  // Automatically scan for forms when page loads
+
   detectForms();
 }
 
-// Function to detect forms on the page
+
 function detectForms() {
-  // Collect page HTML
+ 
   const pageHTML = document.documentElement.outerHTML;
   
-  // Send to backend for processing
+
   fetch('http://127.0.0.1:5002/api/detect-form', {
     method: 'POST',
     headers: {
@@ -423,7 +420,7 @@ function requestFieldGuidance(fieldName) {
   });
 }
 
-// Listen for context menu click
+
 document.addEventListener('contextmenu', event => {
   // Check if clicked on form field
   if (event.target.tagName === 'INPUT' || 

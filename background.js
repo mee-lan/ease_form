@@ -1,8 +1,7 @@
-// Background service worker for Nepal Forms Assistant
 
 const API_BASE_URL = 'http://127.0.0.1:5002/api';
 
-// Debounce function to prevent multiple rapid requests
+
 function debounce(func, wait) {
   let timeout;
   return function(...args) {
@@ -92,9 +91,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// Update field guidance in the popup UI - this is now wrapped in the debounced function above
+
 function updateFieldGuidance(fieldName, formType) {
-  // This function is now just a pass-through to the debounced version
+
   debouncedUpdateFieldGuidance(fieldName, formType);
 }
 
@@ -188,7 +187,7 @@ function detectFormsOnPage() {
   }
 }
 
-// Initial check for backend status
+
 checkBackendStatus().then(isRunning => {
   if (!isRunning) {
     console.warn('Backend server is not running. Some features may not work.');
